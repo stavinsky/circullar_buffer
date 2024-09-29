@@ -30,12 +30,44 @@ void test_buffer_read_write_seq() {
     CU_ASSERT_PTR_NULL(buffer_read());
 
 }
+void test_buffer_release_multiple_buffers() {
+    buffer_reset();
+
+    // Reserve two buffers and mark them as written
+    uint16_t* buf1 = buffer_reserve_wr();
+    uint16_t* buf2 = buffer_reserve_wr();
+    CU_ASSERT_PTR_NOT_NULL(buf1);
+    CU_ASSERT_PTR_NOT_NULL(buf2);
+
+    buffer_done_wr(); 
+    buffer_done_wr();
+    buffer_done_wr();
+    buffer_read();
+    buffer_read();
+    buffer_read();
+    //blocked 3 bytes
+    CU_ASSERT_EQUAL(buffer_get_blocked_bytes(), width * 3); 
+
+    // read small peace 
+    buffer_release_bytes(width / 4 );
+    CU_ASSERT_EQUAL(buffer_get_blocked_bytes(), (width * 3) - (width / 4)); 
+
+    buffer_release_bytes((width / 4 ) * 3 );    
+    CU_ASSERT_EQUAL(buffer_get_blocked_bytes(), (width * 2) ); 
+
+    buffer_release_bytes(width * 2);    
+    CU_ASSERT_EQUAL(buffer_get_blocked_bytes(), 0 ); 
+
+    CU_ASSERT_PTR_NULL( buffer_read());
+
+}
 int main() {
   CU_initialize_registry();
   CU_pSuite suite = CU_add_suite("Buffer Tests", 0, 0);
 
   CU_add_test(suite, "Test buffer reset", test_buffer_reset);
   CU_add_test(suite, "Full test", test_buffer_read_write_seq);
+  CU_add_test(suite, "bytes release", test_buffer_release_multiple_buffers);
 
   CU_basic_set_mode(CU_BRM_VERBOSE);
   CU_basic_run_tests();

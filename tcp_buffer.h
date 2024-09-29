@@ -14,4 +14,6 @@ int buffer_get_read_index(void);
 uint16_t *buffer_reserve_wr(void);
 int buffer_get_busy_index(void);
 void buffer_release(void);
+int buffer_get_blocked_bytes(void);
+void buffer_release_bytes(int);
 #endif
