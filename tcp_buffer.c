@@ -12,19 +12,19 @@ int bytes_blocked_in_read = 0;
 void buffer_reset() {
   wb = 0;
   rb = 0;
-  bytes_blocked_in_read = 0;
+  busy = 0;
 }
 
-uint16_t *buffer_reserve() {
-  if ((wb + 1) % depth == rb) {
+uint16_t *buffer_reserve_wr() {
+  if ((wb + 1) % depth == busy) {
     return NULL;
   }
 
   return buffer[wb];
 }
 
-uint16_t *buffer_consume() {
-  if ((wb + 1) % depth == rb) {
+uint16_t *buffer_done_wr() {
+  if ((wb + 1) % depth == busy) {
     return NULL;
   }
 
@@ -42,9 +42,16 @@ uint16_t *buffer_read() {
   }
   return NULL;
 }
+void buffer_release() {
+    if (busy == rb) {
+        return;
+    }
+    busy = (busy + 1) % depth;
+}
+
 void release_bytes(int bytec_count) {}
 bool buffer_is_empty() { return wb == rb; }
-
 bool buffer_is_full() { return (wb + 1) % depth == rb; }
 int buffer_get_write_index() { return wb; }
 int buffer_get_read_index() { return rb; }
+int buffer_get_busy_index() { return busy; }
